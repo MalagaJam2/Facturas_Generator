@@ -1,6 +1,7 @@
 # 🧾 Factura Generator (Google Apps Script)
 
 Este proyecto automatiza la **generación de facturas en Google Drive** a partir de respuestas de un **Google Form** conectado con una **Google Sheet**.  
+
 Cuando se envía una nueva respuesta, el script crea automáticamente:
 
 - Una **copia del Excel de plantilla**, con los datos del formulario reemplazados.
@@ -133,11 +134,11 @@ const EXCELTEMPLATEID = "ID_de_tu_plantilla_de_factura_en_Drive";
 | `EXCELFOLDERNAME` | Carpeta de los Excels generados (`Excels`) |
 | `NUMBEROFPRODUCTS` | Número de líneas de producto soportadas por la plantilla |
 | `IS_RUNNING` | Flag de ejecución concurrente |
-| `EURFormat` | Formateador de moneda en euros |
+| `CurrencyFormat` | Formateador de moneda dependiendo de la currency seleccionada |
 
 
 ---
 
 **Autor:** Gonzalo Estrada Rojo  
-**Versión:** 1.0 (Octubre 2025)  
+**Versión:** 1.1 (Junio 2026)  
 **Entorno:** Google Apps Script + Google Sheets + Drive API
