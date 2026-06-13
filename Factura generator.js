@@ -30,7 +30,7 @@ const Currencies = {
 //----------------------------------------------
 function CreateNewInvoice() {
   const cache = CacheService.getScriptCache();
-  cache.put(IS_RUNNING, "false");
+  //cache.put(IS_RUNNING, "false");  //Just for testing
   while (cache.get(IS_RUNNING) === "true") {
     Utilities.sleep(3000);
   }
