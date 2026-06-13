@@ -18,11 +18,19 @@ const Quarters = {
   4: "T4 (Octubre-Diciembre)",
 };
 
+const Currencies = {
+  "€": {"locale": "es-ES", "ISOCode":"EUR"},
+  "$": {"locale": "en-US", "ISOCode":"USD"},
+  "£": {"locale": "en-GB", "ISOCode":"GBP"},
+  "¥": {"locale": "ja-JP", "ISOCode":"JPY"},
+}
+
 //----------------------------------------------
 // MAIN EXECUTE FUNCTION
 //----------------------------------------------
 function CreateNewInvoice() {
   const cache = CacheService.getScriptCache();
+  cache.put(IS_RUNNING, "false");
   while (cache.get(IS_RUNNING) === "true") {
     Utilities.sleep(3000);
   }
@@ -189,6 +197,9 @@ function ParseFormData(values, header) {
     }
   }
 
+  var currency = response_data["Moneda"]
+  response_data["ISO Currency"] = Currencies[currency]["ISOCode"]
+
   var IVA = Number(response_data["IVA (%)"]);
   if (isNaN(IVA)) IVA = 0;
 
@@ -205,25 +216,28 @@ function ParseFormData(values, header) {
         var importe = (cantidad * precioNeto);
         importeTotal += importe;
         importeTotalIVA += (cantidad * precioBruto);
-        response_data[`Importe ${i}`] = EURFormat.format(importe.toFixed(2));
-        response_data[`Precio ${i}`] = EURFormat.format(Number(precioNeto).toFixed(2));
-      } else {
+        response_data[`Importe ${i}`] = CurrencyFormat(currency, importe.toFixed(2));
+        response_data[`Precio ${i}`] = CurrencyFormat(currency, Number(precioNeto).toFixed(2));
+      } 
+      else {
         response_data[`Importe ${i}`] = "";
         if (response_data[`Precio ${i}`] !== "") {
           // Si vino texto, intenta formatear igualmente
           var n = Number(response_data[`Precio ${i}`]);
-          if (!isNaN(n)) response_data[`Precio ${i}`] = EURFormat.format(n.toFixed(2));
+          if (!isNaN(n)){
+            response_data[`Precio ${i}`] = CurrencyFormat(currency, n.toFixed(2));
+          } 
         }
       }
     }
 
     var iva = importeTotalIVA - importeTotal;
-    response_data["Importe Neto"] = EURFormat.format(importeTotal.toFixed(2));
-    response_data["IVA Precio"] = EURFormat.format(iva.toFixed(2));
-    response_data["Importe Final"] = EURFormat.format(importeTotalIVA.toFixed(2));
     response_data["IVA Number"] = IVA;
-
-  } else {
+    response_data["Importe Neto"] = CurrencyFormat(currency, importeTotal.toFixed(2));
+    response_data["IVA Precio"] = CurrencyFormat(currency, iva.toFixed(2));
+    response_data["Importe Final"] = CurrencyFormat(currency, importeTotalIVA.toFixed(2));
+  } 
+  else {
     var importeTotal2 = 0;
 
     for (var j = 1; j <= NUMBEROFPRODUCTS; j++) {
@@ -233,26 +247,33 @@ function ParseFormData(values, header) {
       if (!isNaN(cantidad2) && !isNaN(precio) && response_data[`Cantidad ${j}`] !== "" && response_data[`Precio ${j}`] !== "") {
         var importe2 = cantidad2 * precio;
         importeTotal2 += importe2;
-        response_data[`Importe ${j}`] = EURFormat.format(importe2.toFixed(2));
-        response_data[`Precio ${j}`] = EURFormat.format(precio.toFixed(2));
-      } else {
+        response_data[`Importe ${j}`] = CurrencyFormat(currency, importe2.toFixed(2));
+        response_data[`Precio ${j}`] = CurrencyFormat(currency, precio.toFixed(2));
+      } 
+      else {
         response_data[`Importe ${j}`] = "";
         if (response_data[`Precio ${j}`] !== "") {
           var n2 = Number(response_data[`Precio ${j}`]);
-          if (!isNaN(n2)) response_data[`Precio ${j}`] = EURFormat.format(n2.toFixed(2));
+          if (!isNaN(n2)) response_data[`Precio ${j}`] = CurrencyFormat(currency, n2.toFixed(2));
         }
       }
     }
 
     var ivaPrecio = importeTotal2 * (IVA / 100);
     var importeFinal = importeTotal2 + ivaPrecio;
-    response_data["Importe Neto"] = EURFormat.format(importeTotal2.toFixed(2));
-    response_data["IVA Precio"] = EURFormat.format(ivaPrecio.toFixed(2));
-    response_data["Importe Final"] = EURFormat.format(importeFinal.toFixed(2));
     response_data["IVA Number"] = IVA;
+    response_data["Importe Neto"] = CurrencyFormat(currency, importeTotal2.toFixed(2));
+    response_data["IVA Precio"] = CurrencyFormat(currency, ivaPrecio.toFixed(2));
+    response_data["Importe Final"] = CurrencyFormat(currency, importeFinal.toFixed(2));
   }
 
   return response_data;
+}
+
+function CurrencyFormat(currencySelected, number){
+
+  var currency = Currencies[currencySelected];
+  return new Intl.NumberFormat(currency["locale"], { style: 'currency', currency: currency["ISOCode"] }).format(number);
 }
 
 function CreateFilesFromForm(folder) {
